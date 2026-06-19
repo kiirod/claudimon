@@ -9,3 +9,5 @@ This project is less about “shipping a production kernel” and more about ans
 ---
 
 Every commit, every file created (except the LICENSE and README.md) is fully created by Anthropic's AI, 'Claude.', using Sonnet 4.6 high.
+</br>
+Pronounced 'Klaud-ih-mon'.
