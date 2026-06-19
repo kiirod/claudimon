@@ -10,7 +10,7 @@ LD      = ld
 LDFLAGS = -m elf_i386 -T linker.ld --nmagic
 
 BOOT_OBJS = boot/boot.o boot/keyboard_asm.o
-C_SRCS    = src/kernel.c src/vga.c src/keyboard.c src/shell.c
+C_SRCS    = src/kernel.c src/vga.c src/keyboard.c src/shell.c src/fs.c src/speaker.c src/theme.c
 C_OBJS    = $(C_SRCS:.c=.o)
 OBJS      = $(BOOT_OBJS) $(C_OBJS)
 KERNEL    = claudimon.bin
