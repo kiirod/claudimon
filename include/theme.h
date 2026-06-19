@@ -17,4 +17,12 @@ void theme_apply(int index);
 void theme_list(void);
 int  theme_current(void);
 
+/* Current theme colours — usable by any file that includes theme.h */
+extern vga_color_t theme_banner_color;
+extern vga_color_t theme_prompt_color;
+extern vga_color_t theme_text_color;
+extern vga_color_t theme_success_color;
+extern vga_color_t theme_error_color;
+extern vga_color_t theme_dir_color;
+
 #endif
