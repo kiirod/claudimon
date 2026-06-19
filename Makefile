@@ -32,7 +32,7 @@ $(KERNEL): $(OBJS) linker.ld
 
 $(ISO): $(KERNEL)
 	cp $(KERNEL) iso/boot/$(KERNEL)
-	grub-mkrescue -o $(ISO) iso/
+	grub2-mkrescue -o $(ISO) iso/
 
 run: $(ISO)
 	qemu-system-x86_64 -cdrom $(ISO) -m 32M
