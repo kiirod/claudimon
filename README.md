@@ -38,4 +38,4 @@ sudo pacman -S nasm gcc binutils grub xorriso qemu
 
 Then run ```make```, then once it completes, run ```make run``` and enjoy!
 </br>
-More information available at the official [website](https://kernel.mtgp.cc)
+More information available at the official [website](https://kernel.mtgp.cc), (recommended to visit first)
