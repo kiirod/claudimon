@@ -41,6 +41,7 @@ void fs_pwd(void);
 /* File operations */
 int  fs_create(const char* name, const char* data);
 int  fs_cat(const char* name);
+int  fs_load(const char* name, char* out, int max);
 
 /* Current directory index */
 extern int fs_current_dir;
