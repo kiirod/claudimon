@@ -182,6 +182,22 @@ int fs_create(const char* name, const char* data) {
     return -1;
 }
 
+/* ---- Load a file's contents into a buffer (for the editor) ----
+   Returns the length copied, or -1 if not found. */
+int fs_load(const char* name, char* out, int max) {
+    for (int i = 0; i < FS_MAX_FILES; i++) {
+        if (files[i].used && files[i].dir_index == fs_current_dir
+            && fs_strcmp(files[i].name, name) == 0) {
+            int len = files[i].size;
+            if (len > max - 1) len = max - 1;
+            for (int j = 0; j < len; j++) out[j] = files[i].data[j];
+            out[len] = '\0';
+            return len;
+        }
+    }
+    return -1;
+}
+
 /* ---- Print a file's contents ---- */
 int fs_cat(const char* name) {
     for (int i = 0; i < FS_MAX_FILES; i++) {
