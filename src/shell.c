@@ -5,6 +5,7 @@
 #include "speaker.h"
 #include "theme.h"
 #include "editor.h"
+#include "power.h"
 #include "stdint.h"
 
 extern vga_color_t theme_banner_color;
@@ -138,6 +139,11 @@ static void cmd_help(void) {
     terminal_write("  history         - Show command history\n");
     terminal_write("  keyboard        - List keyboard layouts\n");
     terminal_write("  keyboard <n>    - Switch keyboard layout\n");
+    terminal_write("  shutdown        - Power off Claudimon\n");
+    terminal_write("  close           - Same as shutdown\n");
+    terminal_write("  reboot          - Restart Claudimon\n");
+    terminal_write("\nTip: Shift+Up / Shift+Down scrolls the screen history\n");
+    terminal_write("     Up / Down (no shift) cycles command history\n");
     terminal_write("  calc <expr>     - e.g. calc 10 + 5\n");
     terminal_write("  beep            - Beep\n");
     terminal_write("  play <freq>     - Play tone (Hz)\n");
@@ -366,6 +372,28 @@ static void cmd_edit(const char* args) {
     editor_open(args);
 }
 
+static void cmd_shutdown(void) {
+    terminal_set_color(theme_banner_color, VGA_COLOR_BLACK);
+    terminal_write("\nShutting down Claudimon...\n");
+    terminal_set_color(theme_text_color, VGA_COLOR_BLACK);
+    terminal_write("Goodbye!\n");
+    speaker_play(440);
+    for (volatile uint32_t i = 0; i < 3000000; i++) __asm__("nop");
+    speaker_stop();
+    power_shutdown();
+    /* If we ever reach here, shutdown wasn't supported by the host */
+    terminal_set_color(theme_error_color, VGA_COLOR_BLACK);
+    terminal_write("\nShutdown not supported on this machine — halting instead.\n");
+    power_halt();
+}
+
+static void cmd_reboot(void) {
+    terminal_set_color(theme_banner_color, VGA_COLOR_BLACK);
+    terminal_write("\nRebooting Claudimon...\n");
+    for (volatile uint32_t i = 0; i < 3000000; i++) __asm__("nop");
+    power_reboot();
+}
+
 /* ============================================
    COMMAND PARSER
    ============================================ */
@@ -389,6 +417,11 @@ static void execute(char* cmd) {
     else if (k_strcmp(cmd,"theme")==0)   theme_list();
     else if (k_strcmp(cmd,"history")==0) cmd_history();
     else if (k_strcmp(cmd,"keyboard")==0) cmd_keyboard("");
+    else if (k_strcmp(cmd,"shutdown")==0) cmd_shutdown();
+    else if (k_strcmp(cmd,"close")==0)    cmd_shutdown();
+    else if (k_strcmp(cmd,"poweroff")==0) cmd_shutdown();
+    else if (k_strcmp(cmd,"reboot")==0)   cmd_reboot();
+    else if (k_strcmp(cmd,"restart")==0)  cmd_reboot();
     else if (k_strcmp(cmd,"echo")==0)    cmd_echo("");
     else if (k_strncmp(cmd,"echo ",5)==0)   cmd_echo(cmd+5);
     else if (k_strncmp(cmd,"mkdir ",6)==0)  fs_mkdir(cmd+6);
@@ -469,22 +502,20 @@ void shell_run(void) {
                 char c2=keyboard_getchar();
                 char c3=keyboard_getchar();
                 if(c2=='[' && c3=='A') {
-                    /* Up arrow */
+                    /* Up arrow: previous history entry */
                     int next_offset=hist_offset+1;
                     const char* h=history_get(next_offset);
                     if(h) {
                         hist_offset=next_offset;
-                        /* Clear current line */
                         for(int i=0;i<len;i++) { terminal_putchar('\b'); }
                         for(int i=0;i<len;i++) terminal_putchar(' ');
                         for(int i=0;i<len;i++) { terminal_putchar('\b'); }
-                        /* Write history entry */
                         int i=0;
                         while(h[i]&&i<CMD_BUFFER_SIZE-1){buf[i]=h[i];terminal_putchar(h[i]);i++;}
                         len=i; pos=i; buf[len]='\0';
                     }
                 } else if(c2=='[' && c3=='B') {
-                    /* Down arrow */
+                    /* Down arrow: next history entry */
                     if(hist_offset>0) {
                         hist_offset--;
                         for(int i=0;i<len;i++) terminal_putchar('\b');
@@ -499,6 +530,12 @@ void shell_run(void) {
                             len=i; pos=i; buf[len]='\0';
                         }
                     }
+                } else if(c2=='[' && c3=='S') {
+                    /* Shift+Up: scroll the screen view up (view old output) */
+                    terminal_scroll_up(3);
+                } else if(c2=='[' && c3=='T') {
+                    /* Shift+Down: scroll the screen view back down */
+                    terminal_scroll_down(3);
                 }
 
             /* --- Normal character --- */
