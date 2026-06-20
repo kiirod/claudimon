@@ -136,6 +136,8 @@ static void cmd_help(void) {
     terminal_write("  touch <f> <txt> - Create file\n");
     terminal_write("  edit <file>     - Open text editor\n");
     terminal_write("  history         - Show command history\n");
+    terminal_write("  keyboard        - List keyboard layouts\n");
+    terminal_write("  keyboard <n>    - Switch keyboard layout\n");
     terminal_write("  calc <expr>     - e.g. calc 10 + 5\n");
     terminal_write("  beep            - Beep\n");
     terminal_write("  play <freq>     - Play tone (Hz)\n");
@@ -329,6 +331,36 @@ static void cmd_cd(const char* args) {
     else { if(fs_cd(args)==0) path_push(args); }
 }
 
+static void cmd_keyboard(const char* args) {
+    if (!args || !*args) {
+        terminal_set_color(theme_banner_color, VGA_COLOR_BLACK);
+        terminal_write("\nAvailable keyboard layouts:\n");
+        terminal_set_color(theme_text_color, VGA_COLOR_BLACK);
+        for (int i = 0; i < LAYOUT_COUNT; i++) {
+            char num[4]; uint_to_str(i, num);
+            if (i == (int)keyboard_get_layout()) terminal_write("  * ");
+            else                                  terminal_write("    ");
+            terminal_write(num);
+            terminal_write(" - ");
+            terminal_write(keyboard_layout_name((keyboard_layout_t)i));
+            terminal_write("\n");
+        }
+        terminal_write("\nUsage: keyboard <number>\n\n");
+        return;
+    }
+    int n = args[0] - '0';
+    if (n < 0 || n >= LAYOUT_COUNT) {
+        terminal_set_color(theme_error_color, VGA_COLOR_BLACK);
+        terminal_write("Invalid layout number. Type 'keyboard' to see options.\n");
+        return;
+    }
+    keyboard_set_layout((keyboard_layout_t)n);
+    terminal_set_color(theme_success_color, VGA_COLOR_BLACK);
+    terminal_write("Keyboard layout set to: ");
+    terminal_write(keyboard_layout_name((keyboard_layout_t)n));
+    terminal_write("\n");
+}
+
 static void cmd_edit(const char* args) {
     if(!args||!*args){terminal_write("Usage: edit <filename>\n");return;}
     editor_open(args);
@@ -356,6 +388,7 @@ static void execute(char* cmd) {
     else if (k_strcmp(cmd,"jingle")==0)  speaker_boot_sound();
     else if (k_strcmp(cmd,"theme")==0)   theme_list();
     else if (k_strcmp(cmd,"history")==0) cmd_history();
+    else if (k_strcmp(cmd,"keyboard")==0) cmd_keyboard("");
     else if (k_strcmp(cmd,"echo")==0)    cmd_echo("");
     else if (k_strncmp(cmd,"echo ",5)==0)   cmd_echo(cmd+5);
     else if (k_strncmp(cmd,"mkdir ",6)==0)  fs_mkdir(cmd+6);
@@ -367,6 +400,7 @@ static void execute(char* cmd) {
     else if (k_strncmp(cmd,"theme ",6)==0)  cmd_theme(cmd+6);
     else if (k_strncmp(cmd,"calc ",5)==0)   cmd_calc(cmd+5);
     else if (k_strncmp(cmd,"edit ",5)==0)   cmd_edit(cmd+5);
+    else if (k_strncmp(cmd,"keyboard ",9)==0) cmd_keyboard(cmd+9);
     else {
         terminal_set_color(theme_error_color,VGA_COLOR_BLACK);
         terminal_write("Unknown command: '");terminal_write(cmd);terminal_write("'\n");
